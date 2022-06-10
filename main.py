@@ -4,10 +4,10 @@
 #dmesg | grep "tty" to find port name
 
 import serial,time
-
+import mqtt
 
 if __name__ == '__main__':
-
+    
     print('Running. Press CTRL-C to exit.')
     with serial.Serial("/dev/ttyUSB0", 115200, timeout=1) as arduino:
         with serial.Serial("/dev/ttyUSB1", 115200, timeout=1) as arduino2:
@@ -21,10 +21,16 @@ if __name__ == '__main__':
                         answer = answer.decode()
                         print(f" res: {answer}")
                         if "F9 14 04 7F" in answer:
-                              print("hello")
+                              message = "Porte ouverte par Sophie"
                               answer = "ok"
+                              arduino2.write(answer.encode())
+                              mqtt.publish(message)
+                        elif "Card read previously" in answer:
+                            print("nothing to do")
                         else:
                             answer = "nok"
-                        arduino2.write(answer.encode())
+                            message = "Badge Inconnu la porte reste vérouillée"
+                            arduino2.write(answer.encode())
+                            mqtt.publish(message)
                         arduino2.flushInput() #remove data after reading
                         arduino.flushInput()
